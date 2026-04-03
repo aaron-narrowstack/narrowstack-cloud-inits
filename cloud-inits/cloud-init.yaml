@@ -1,0 +1,27 @@
+#cloud-config
+package_update: true
+packages:
+  - ca-certificates
+  - curl
+
+runcmd:
+  - curl -fsSL https://get.docker.com | sh
+  - systemctl enable --now docker
+  - mkdir -p /opt/app
+  - |
+    docker network create app-network
+    docker compose -f /opt/app/traefik/docker-compose.yml up -d
+    for d in /opt/app/*/ ; do
+      case $(basename "${d%/}") in
+        traefik|nginx) continue;;
+      esac
+      if
+        [ -f "${d}docker-compose.yml" ]; then
+          docker compose -f "${d}docker-compose.yml" up -d
+      elif
+        [ -f "${d}docker-compose.yaml" ]; then
+            docker compose -f "${d}docker-compose.yaml" up -d
+      else
+        continue
+      fi
+    done
