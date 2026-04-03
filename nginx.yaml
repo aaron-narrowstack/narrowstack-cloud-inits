@@ -1,0 +1,19 @@
+  mkdir -p /opt/app/nginx
+    cat > /opt/app/nginx/docker-compose.yml << 'NGINX'
+    services:
+      nginx:
+        image: lscr.io/linuxserver/nginx:latest
+        container_name: nginx
+        environment:
+          - PUID=1000
+          - PGID=1000
+          - TZ=Etc/UTC
+          - NGINX_AUTORELOAD= #optional
+          - NGINX_AUTORELOAD_WATCHLIST= #optional
+        volumes:
+          - /path/to/nginx/config:/config
+        ports:
+          - 80:80
+          - 443:443
+        restart: unless-stopped
+    NGINX
