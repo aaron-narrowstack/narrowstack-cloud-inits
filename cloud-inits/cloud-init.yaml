@@ -4,23 +4,57 @@ packages:
   - ca-certificates
   - curl
 
+write_files:
+  - path: /opt/app/traefik/docker-compose.yml
+    permissions: '0644'
+    content: |
+      version: '3.8'
+      services:
+        traefik:
+          image: traefik:v3.2
+          container_name: traefik
+          command:
+            - "--api.dashboard=false"
+            - "--providers.docker=true"
+            - "--providers.docker.exposedbydefault=false"
+            - "--entrypoints.web.address=:80"
+            - "--entrypoints.websecure.address=:443"
+            - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+            - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+            - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+            - "--certificatesresolvers.letsencrypt.acme.email=you@example.com"
+            - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+          ports:
+            - "80:80"
+            - "443:443"
+          volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /opt/app/traefik/letsencrypt:/letsencrypt
+          networks:
+            - app-network
+          restart: unless-stopped
+      networks:
+        app-network:
+          external: true
+  - path: /opt/app/traefik/letsencrypt/acme.json
+    permissions: '0600'
+    content: ""
+
 runcmd:
   - curl -fsSL https://get.docker.com | sh
   - systemctl enable --now docker
   - mkdir -p /opt/app
   - |
-    docker network create app-network
+    docker network inspect app-network >/dev/null 2>&1 || docker network create app-network
     docker compose -f /opt/app/traefik/docker-compose.yml up -d
     for d in /opt/app/*/ ; do
       case $(basename "${d%/}") in
         traefik|nginx) continue;;
       esac
-      if
-        [ -f "${d}docker-compose.yml" ]; then
-          docker compose -f "${d}docker-compose.yml" up -d
-      elif
-        [ -f "${d}docker-compose.yaml" ]; then
-            docker compose -f "${d}docker-compose.yaml" up -d
+      if [ -f "${d}docker-compose.yml" ]; then
+        docker compose -f "${d}docker-compose.yml" up -d
+      elif [ -f "${d}docker-compose.yaml" ]; then
+        docker compose -f "${d}docker-compose.yaml" up -d
       else
         continue
       fi
