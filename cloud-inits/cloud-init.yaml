@@ -1,4 +1,5 @@
 #cloud-config
+#cloud-config
 package_update: true
 packages:
   - ca-certificates
@@ -14,16 +15,18 @@ write_files:
           image: traefik:v3.2
           container_name: traefik
           command:
-            - "--api.dashboard=false"
+            - "--api.dashboard=true"
             - "--providers.docker=true"
             - "--providers.docker.exposedbydefault=false"
             - "--entrypoints.web.address=:80"
             - "--entrypoints.websecure.address=:443"
             - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+            - "--entrypoints.traefik.address=:8080"
             - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
             - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
             - "--certificatesresolvers.letsencrypt.acme.email=you@example.com"
             - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+            - "--api.insecure=true"
           ports:
             - "80:80"
             - "443:443"
@@ -47,15 +50,3 @@ runcmd:
   - |
     docker network inspect app-network >/dev/null 2>&1 || docker network create app-network
     docker compose -f /opt/app/traefik/docker-compose.yml up -d
-    for d in /opt/app/*/ ; do
-      case $(basename "${d%/}") in
-        traefik|nginx) continue;;
-      esac
-      if [ -f "${d}docker-compose.yml" ]; then
-        docker compose -f "${d}docker-compose.yml" up -d
-      elif [ -f "${d}docker-compose.yaml" ]; then
-        docker compose -f "${d}docker-compose.yaml" up -d
-      else
-        continue
-      fi
-    done
