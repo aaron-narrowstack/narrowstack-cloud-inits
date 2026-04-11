@@ -1,5 +1,4 @@
 #cloud-config
-#cloud-config
 package_update: true
 packages:
   - ca-certificates
@@ -12,25 +11,23 @@ write_files:
       version: '3.8'
       services:
         traefik:
-          image: traefik:v3.2
+          image: traefik:latest
           container_name: traefik
           command:
-            - "--api.dashboard=true"
+            - "--api.dashboard=false"
             - "--providers.docker=true"
             - "--providers.docker.exposedbydefault=false"
+            - "--providers.docker.network=app-network"
             - "--entrypoints.web.address=:80"
             - "--entrypoints.websecure.address=:443"
             - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-            - "--entrypoints.traefik.address=:8080"
             - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
             - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
-            - "--certificatesresolvers.letsencrypt.acme.email=you@example.com"
+            - "--certificatesresolvers.letsencrypt.acme.email=admin@aarondevelop.com"
             - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-            - "--api.insecure=true"
           ports:
             - "80:80"
             - "443:443"
-            - "127.0.0.1:8080:8080"
           volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro
             - /opt/app/traefik/letsencrypt:/letsencrypt
