@@ -1,6 +1,7 @@
 mkdir -p /opt/app/n8n
 touch /opt/app/n8n/docker-compose.yml
 cat > /opt/app/n8n/docker-compose.yml << N8N
+version: '3.8'
 services:
   n8n:
     image: n8nio/n8n
@@ -16,7 +17,7 @@ services:
       - /opt/app/n8n/n8n_data:/home/node/.n8n
     labels:
       - traefik.enable=true
-      - "traefik.http.routers.n8n.rule=Host(`${N8N_HOST}`)"
+      - "traefik.http.routers.n8n.rule=Host(\`${N8N_HOST}\`)"
       - traefik.http.routers.n8n.entrypoints=websecure
       - traefik.http.routers.n8n.tls.certresolver=letsencrypt
       - traefik.http.services.n8n.loadbalancer.server.port=5678
