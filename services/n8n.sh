@@ -1,7 +1,6 @@
 mkdir -p /opt/app/n8n
 touch /opt/app/n8n/docker-compose.yml
 cat > /opt/app/n8n/docker-compose.yml << N8N
-version: '3.8'
 services:
   n8n:
     image: n8nio/n8n
